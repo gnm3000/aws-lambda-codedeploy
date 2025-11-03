@@ -1,0 +1,82 @@
+# ==============================
+# NODE / SERVERLESS
+# ==============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.env
+.env.*
+.DS_Store
+
+# Serverless build artifacts
+.serverless/
+.sls-next/
+.webpack/
+dist/
+build/
+coverage/
+tmp/
+logs/
+*.log
+
+# Local serverless state
+.serverlessrc
+.serverless_plugins/
+.serverless-deployments/
+.serverless-output.json
+
+# VSCode and IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ==============================
+# TERRAFORM
+# ==============================
+# Local terraform state
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform/
+.terraform.lock.hcl
+
+# Plan files
+*.tfplan
+*.tfvars
+*.tfvars.json
+
+# ==============================
+# AWS / SECRETS
+# ==============================
+# AWS credentials and config
+.aws/
+*.pem
+*.key
+*.crt
+*.csr
+
+# ==============================
+# SYSTEM / MISC
+# ==============================
+# OS
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Backup files
+*~
+*.bak
+*.tmp
+*.old
+
+# Local test data
+__tests__/temp/
+__mocks__/
