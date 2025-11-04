@@ -16,7 +16,6 @@ build:
       - aws-sdk
     target: node20
     platform: node
-    concurrency: 10
 
 
 functions:
