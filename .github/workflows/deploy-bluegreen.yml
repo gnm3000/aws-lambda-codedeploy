@@ -28,7 +28,9 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: serverless-bluegreen/package-lock.json
+          cache-dependency-path: |
+            serverless-bluegreen/package-lock.json
+            serverless-bluegreen/package.json
 
       - name: Install dependencies
         run: npm ci
