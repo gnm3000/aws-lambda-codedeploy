@@ -1,0 +1,43 @@
+service: bluegreen-lambda
+frameworkVersion: '4'
+
+plugins:
+  - serverless-plugin-canary-deployments
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+
+
+
+functions:
+  hello:
+    handler: index.handler
+    name: hello-world-lambda
+    deploymentSettings:
+      alias: prod
+      type: Linear10PercentEvery1Minute #AllAtOnce  # Linear20PercentEvery1Minute
+      alarms:
+        - LambdaErrorAlarm
+      rollback:
+        enabled: true
+
+
+
+resources:
+  Resources:
+    LambdaErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: "Rollback if errors > 1 within 5 minutes"
+        Namespace: "AWS/Lambda"
+        MetricName: "Errors"
+        Dimensions:
+          - Name: FunctionName
+            Value: hello-world-lambda
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 1
+        Threshold: 1
+        ComparisonOperator: GreaterThanThreshold
+        TreatMissingData: notBreaching

@@ -10,6 +10,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "serverless": "^4.22.0"
+    "serverless": "^4.22.0",
+    "serverless-plugin-canary-deployments": "^0.8.0"
+  },
+  "overrides": {
+    "serverless-plugin-canary-deployments": {
+      "serverless": "$serverless"
+    }
   }
 }
