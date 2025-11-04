@@ -25,10 +25,18 @@ functions:
     deploymentSettings:
       alias: prod
       type: Linear10PercentEvery1Minute #AllAtOnce  # Linear20PercentEvery1Minute
+      preTrafficHook: beforeAllowTrafficValidation
+      postTrafficHook: afterAllowTrafficValidation
       alarms:
         - LambdaErrorAlarm
       rollback:
         enabled: true
+
+  beforeAllowTrafficValidation:
+    handler: src/codedeployHooks.beforeAllowTraffic
+
+  afterAllowTrafficValidation:
+    handler: src/codedeployHooks.afterAllowTraffic
 
 
 
