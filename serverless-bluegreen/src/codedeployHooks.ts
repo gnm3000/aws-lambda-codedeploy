@@ -1,4 +1,8 @@
-import AWS from 'aws-sdk';
+import {
+  CodeDeployClient,
+  PutLifecycleEventHookExecutionStatusCommand,
+} from '@aws-sdk/client-codedeploy';
+import type { PutLifecycleEventHookExecutionStatusCommandInput } from '@aws-sdk/client-codedeploy';
 import type { APIGatewayProxyEventV2 } from 'aws-lambda';
 import { handler } from './handler';
 
@@ -13,16 +17,21 @@ type ExtendedCodeDeployLifecycleEvent = CodeDeployLifecycleEvent & {
   LifecycleEventHookExecutionId?: string;
 };
 
+type LifecycleEventStatus =
+  PutLifecycleEventHookExecutionStatusCommandInput['status'];
+
 interface LifecycleEventDetails {
   deploymentId: string;
   lifecycleEventHookExecutionId: string;
 }
 
-const codeDeployClient = new AWS.CodeDeploy();
+const codeDeployClient = new CodeDeployClient({});
 
 const extractLifecycleEventDetails = (
   event: ExtendedCodeDeployLifecycleEvent
 ): LifecycleEventDetails => {
+  console.log('CodeDeploy lifecycle event keys:', Object.keys(event));
+
   const deploymentId = event.deploymentId ?? event.DeploymentId;
   if (!deploymentId) {
     throw new Error('Missing deploymentId on CodeDeploy event');
@@ -38,6 +47,8 @@ const extractLifecycleEventDetails = (
 };
 
 const runEndToEndValidation = async (): Promise<void> => {
+  console.log('Starting end-to-end validation');
+
   const event: APIGatewayProxyEventV2 = {
     version: '2.0',
     routeKey: 'GET /',
@@ -63,19 +74,27 @@ const runEndToEndValidation = async (): Promise<void> => {
   if (payload.message !== 'Hello Blue/Green!') {
     throw new Error('Unexpected response message');
   }
+
+  console.log('End-to-end validation succeeded');
 };
 
 const notifyCodeDeploy = async (
   details: LifecycleEventDetails,
-  status: AWS.CodeDeploy.LifecycleEventStatus
+  status: LifecycleEventStatus
 ): Promise<void> => {
-  await codeDeployClient
-    .putLifecycleEventHookExecutionStatus({
+  console.log('Notifying CodeDeploy', {
+    deploymentId: details.deploymentId,
+    lifecycleEventHookExecutionId: details.lifecycleEventHookExecutionId,
+    status,
+  });
+
+  await codeDeployClient.send(
+    new PutLifecycleEventHookExecutionStatusCommand({
       deploymentId: details.deploymentId,
       lifecycleEventHookExecutionId: details.lifecycleEventHookExecutionId,
       status,
     })
-    .promise();
+  );
 };
 
 export const beforeAllowTraffic = async (
@@ -86,6 +105,7 @@ export const beforeAllowTraffic = async (
   try {
     await runEndToEndValidation();
   } catch (error) {
+    console.error('BeforeAllowTraffic validation failed', error);
     await notifyCodeDeploy(lifecycleEventDetails, 'Failed');
     throw error;
   }
@@ -106,6 +126,7 @@ export const afterAllowTraffic = async (
   try {
     await runEndToEndValidation();
   } catch (error) {
+    console.error('AfterAllowTraffic validation failed', error);
     await notifyCodeDeploy(lifecycleEventDetails, 'Failed');
     throw error;
   }

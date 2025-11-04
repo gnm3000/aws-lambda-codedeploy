@@ -12,8 +12,6 @@ build:
     bundle: true
     minify: true
     sourcemap: true
-    external:
-      - aws-sdk
     target: node20
     platform: node
 
