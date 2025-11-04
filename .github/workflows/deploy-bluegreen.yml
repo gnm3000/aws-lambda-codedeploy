@@ -37,7 +37,7 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        run: npm test
+        run: npm run test:unit
 
       - name: Upload test results
         if: always() && hashFiles('serverless-bluegreen/test-results/**') != ''
