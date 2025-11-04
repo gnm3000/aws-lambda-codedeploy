@@ -3,19 +3,21 @@ name: Deploy BlueGreen Lambda
 on:
   push:
     paths:
-      - 'serverless-bluegreen/**'   # 👈 solo se ejecuta si cambia algo ahí
+      - 'serverless-bluegreen/**'
     branches:
-      - main                       # o el branch que uses para deploy a prod
+      - main
+      - develop
 
 jobs:
-  deploy:
-    name: Deploy to AWS (Prod)
+  deploy-dev:
+    if: github.ref == 'refs/heads/develop'
+    name: Deploy to AWS (Dev)
     runs-on: ubuntu-latest
-    environment: prod 
+    environment: dev   # 👈 usa los environment secrets de "dev"
 
     defaults:
       run:
-        working-directory: serverless-bluegreen   # 👈 el root del workspace
+        working-directory: serverless-bluegreen
 
     steps:
       - name: Checkout code
@@ -38,5 +40,39 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Deploy with Serverless
+      - name: Deploy with Serverless (Dev)
+        run: npx serverless deploy --stage dev --verbose
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    name: Deploy to AWS (Prod)
+    runs-on: ubuntu-latest
+    environment: prod   # 👈 usa los environment secrets de "prod"
+
+    defaults:
+      run:
+        working-directory: serverless-bluegreen
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: serverless-bluegreen/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy with Serverless (Prod)
         run: npx serverless deploy --stage prod --verbose
