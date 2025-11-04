@@ -36,6 +36,27 @@ Answer concisely:
 - [ ] Includes at least one **minor fix or improvement**
 - [ ] Can be safely deployed multiple times per day
 
+
+
+---
+
+## 5️⃣ AWS Well-Architected — 6 Pillars Check
+
+For each PR, verify if the change **upholds or degrades** these structural qualities.
+Mark with `[X]` only if **explicitly reviewed** or **addressed** in this change.
+
+| Pillar                        | Check | Reflection                                                              |
+| :---------------------------- | :---: | :---------------------------------------------------------------------- |
+| **1. Operational Excellence** |  [ ]  | Does this change improve observability, automation, or process clarity? |
+| **2. Security**               |  [ ]  | Were credentials, policies, and data access boundaries validated?       |
+| **3. Reliability**            |  [ ]  | Does it increase fault tolerance, retries, or graceful degradation?     |
+| **4. Performance Efficiency** |  [ ]  | Are resources and execution time optimized for load?                    |
+| **5. Cost Optimization**      |  [ ]  | Does it reduce unnecessary compute, storage, or idle usage?             |
+| **6. Sustainability**         |  [ ]  | Does it minimize compute cycles, network calls, or wasteful processes?  |
+
+> *If none of these apply, re-evaluate whether the PR meaningfully alters system structure or only its surface.*
+
+---
 ---
 
 ## 5️⃣ Post-Merge Learning
