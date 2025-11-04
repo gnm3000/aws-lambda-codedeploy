@@ -37,6 +37,8 @@ jobs:
           else
             npm install
           fi
+      - name: Install Serverless v4
+        run: npm install -g serverless@^4
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -83,6 +85,8 @@ jobs:
           else
             npm install
           fi
+      - name: Install Serverless v4
+        run: npm install -g serverless@^4
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
