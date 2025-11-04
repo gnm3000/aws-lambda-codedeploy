@@ -12,6 +12,6 @@
     "sourceMap": true,
     "noEmit": true          // 🔹 clave: evita generar .js, deja que esbuild compile
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "tests/**/*.ts"],
   "exclude": ["node_modules", ".serverless", ".build"]
 }
