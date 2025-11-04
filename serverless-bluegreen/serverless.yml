@@ -7,12 +7,21 @@ provider:
   name: aws
   runtime: nodejs20.x
   region: us-east-1
-
+build:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: true
+    exclude:
+      - aws-sdk
+    target: node20
+    platform: node
+    concurrency: 10
 
 
 functions:
   hello:
-    handler: index.handler
+    handler: src/handler.handler
     name: hello-world-lambda
     deploymentSettings:
       alias: prod
