@@ -5,7 +5,6 @@ on:
     paths:
       - 'serverless-bluegreen/**'
       - '.github/**'
-      
     branches:
       - main
       - develop
@@ -15,11 +14,7 @@ jobs:
     if: github.ref == 'refs/heads/develop'
     name: Deploy to AWS (Dev)
     runs-on: ubuntu-latest
-    environment: dev   # 👈 usa los environment secrets de "dev"
-
-    defaults:
-      run:
-        working-directory: serverless-bluegreen
+    environment: dev
 
     steps:
       - name: Checkout code
@@ -35,7 +30,13 @@ jobs:
             serverless-bluegreen/package.json
 
       - name: Install dependencies
-        run: npm ci
+        working-directory: serverless-bluegreen
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -45,17 +46,21 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy with Serverless (Dev)
-        run: npx serverless deploy --stage dev --verbose
+        uses: serverless/github-action@v3.2
+        with:
+          args: -c "cd ./serverless-bluegreen && serverless deploy --stage dev --verbose"
+          entrypoint: /bin/sh
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
 
   deploy-prod:
     if: github.ref == 'refs/heads/main'
     name: Deploy to AWS (Prod)
     runs-on: ubuntu-latest
-    environment: prod   # 👈 usa los environment secrets de "prod"
-
-    defaults:
-      run:
-        working-directory: serverless-bluegreen
+    environment: prod
 
     steps:
       - name: Checkout code
@@ -71,7 +76,13 @@ jobs:
             serverless-bluegreen/package.json
 
       - name: Install dependencies
-        run: npm ci
+        working-directory: serverless-bluegreen
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -81,4 +92,12 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy with Serverless (Prod)
-        run: npx serverless deploy --stage prod --verbose
+        uses: serverless/github-action@v3.2
+        with:
+          args: -c "cd ./serverless-bluegreen && serverless deploy --stage prod --verbose"
+          entrypoint: /bin/sh
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
