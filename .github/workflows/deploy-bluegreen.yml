@@ -49,6 +49,7 @@ jobs:
 
       - name: Deploy with Serverless (Dev)
         run: serverless deploy --stage dev --verbose
+        working-directory: serverless-bluegreen
         
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
@@ -94,6 +95,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy with Serverless (prod)
+        working-directory: serverless-bluegreen
         run: serverless deploy --stage prod --verbose
         
         env:
