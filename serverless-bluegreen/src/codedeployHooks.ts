@@ -1,11 +1,41 @@
 import AWS from 'aws-sdk';
-import type {
-  APIGatewayProxyEventV2,
-  CodeDeployLifecycleEvent,
-} from 'aws-lambda';
+import type { APIGatewayProxyEventV2 } from 'aws-lambda';
 import { handler } from './handler';
 
+interface CodeDeployLifecycleEvent {
+  deploymentId?: string;
+  lifecycleEventHookExecutionId?: string;
+  [key: string]: unknown;
+}
+
+type ExtendedCodeDeployLifecycleEvent = CodeDeployLifecycleEvent & {
+  DeploymentId?: string;
+  LifecycleEventHookExecutionId?: string;
+};
+
+interface LifecycleEventDetails {
+  deploymentId: string;
+  lifecycleEventHookExecutionId: string;
+}
+
 const codeDeployClient = new AWS.CodeDeploy();
+
+const extractLifecycleEventDetails = (
+  event: ExtendedCodeDeployLifecycleEvent
+): LifecycleEventDetails => {
+  const deploymentId = event.deploymentId ?? event.DeploymentId;
+  if (!deploymentId) {
+    throw new Error('Missing deploymentId on CodeDeploy event');
+  }
+
+  const lifecycleEventHookExecutionId =
+    event.lifecycleEventHookExecutionId ?? event.LifecycleEventHookExecutionId;
+  if (!lifecycleEventHookExecutionId) {
+    throw new Error('Missing lifecycleEventHookExecutionId on CodeDeploy event');
+  }
+
+  return { deploymentId, lifecycleEventHookExecutionId };
+};
 
 const runEndToEndValidation = async (): Promise<void> => {
   const event: APIGatewayProxyEventV2 = {
@@ -36,54 +66,54 @@ const runEndToEndValidation = async (): Promise<void> => {
 };
 
 const notifyCodeDeploy = async (
-  event: CodeDeployLifecycleEvent,
+  details: LifecycleEventDetails,
   status: AWS.CodeDeploy.LifecycleEventStatus
 ): Promise<void> => {
-  if (!event.lifecycleEventHookExecutionId) {
-    throw new Error('Missing lifecycleEventHookExecutionId on CodeDeploy event');
-  }
-
   await codeDeployClient
     .putLifecycleEventHookExecutionStatus({
-      deploymentId: event.deploymentId,
-      lifecycleEventHookExecutionId: event.lifecycleEventHookExecutionId,
+      deploymentId: details.deploymentId,
+      lifecycleEventHookExecutionId: details.lifecycleEventHookExecutionId,
       status,
     })
     .promise();
 };
 
 export const beforeAllowTraffic = async (
-  event: CodeDeployLifecycleEvent
+  event: ExtendedCodeDeployLifecycleEvent
 ): Promise<{ deploymentId: string; status: string }> => {
+  const lifecycleEventDetails = extractLifecycleEventDetails(event);
+
   try {
     await runEndToEndValidation();
   } catch (error) {
-    await notifyCodeDeploy(event, 'Failed');
+    await notifyCodeDeploy(lifecycleEventDetails, 'Failed');
     throw error;
   }
 
-  await notifyCodeDeploy(event, 'Succeeded');
+  await notifyCodeDeploy(lifecycleEventDetails, 'Succeeded');
 
   return {
-    deploymentId: event.deploymentId,
+    deploymentId: lifecycleEventDetails.deploymentId,
     status: 'BeforeAllowTraffic validation succeeded',
   };
 };
 
 export const afterAllowTraffic = async (
-  event: CodeDeployLifecycleEvent
+  event: ExtendedCodeDeployLifecycleEvent
 ): Promise<{ deploymentId: string; status: string }> => {
+  const lifecycleEventDetails = extractLifecycleEventDetails(event);
+
   try {
     await runEndToEndValidation();
   } catch (error) {
-    await notifyCodeDeploy(event, 'Failed');
+    await notifyCodeDeploy(lifecycleEventDetails, 'Failed');
     throw error;
   }
 
-  await notifyCodeDeploy(event, 'Succeeded');
+  await notifyCodeDeploy(lifecycleEventDetails, 'Succeeded');
 
   return {
-    deploymentId: event.deploymentId,
+    deploymentId: lifecycleEventDetails.deploymentId,
     status: 'AfterAllowTraffic validation succeeded',
   };
 };
