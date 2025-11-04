@@ -12,7 +12,7 @@ build:
     bundle: true
     minify: true
     sourcemap: true
-    exclude:
+    external:
       - aws-sdk
     target: node20
     platform: node
