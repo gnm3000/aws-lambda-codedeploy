@@ -1,0 +1,55 @@
+name: Deploy SAM Lambda
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'sam-lambda-ts-app/**'
+      - '.github/workflows/deploy-sam.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: sam-lambda-ts-app
+    environment: prod
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: sam-lambda-ts-app/hello-world/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: sam-lambda-ts-app/hello-world
+
+      - name: Run tests
+        run: npm test
+        working-directory: sam-lambda-ts-app/hello-world
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Build SAM application
+        run: sam build --config-env prod
+
+      - name: Deploy SAM application
+        run: ./scripts/deploy-with-url.sh --config-env prod --no-confirm-changeset --no-progressbar
