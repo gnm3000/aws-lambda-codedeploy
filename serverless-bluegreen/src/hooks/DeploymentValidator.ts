@@ -17,6 +17,11 @@ export interface DeploymentValidatorContract {
   validate(): Promise<void>;
 }
 
+const isStructuredResult = (
+  response: APIGatewayProxyResultV2
+): response is APIGatewayProxyStructuredResultV2 =>
+  typeof response === 'object' && response !== null && 'statusCode' in response;
+
 export class DeploymentValidator implements DeploymentValidatorContract {
   private readonly event: APIGatewayProxyEventV2;
   private readonly expectedMessage: string;
@@ -42,17 +47,10 @@ export class DeploymentValidator implements DeploymentValidatorContract {
   public async validate(): Promise<void> {
     const response = await this.handler(this.event);
 
-    if (typeof response !== 'object' || response === null) {
-      throw new Error('Expected structured handler response');
-    }
-
-    if (!('statusCode' in response)) {
+    if (!isStructuredResult(response)) {
       throw new Error('Expected statusCode in handler response');
     }
-
-    const structuredResponse =
-      response as APIGatewayProxyStructuredResultV2;
-    const { statusCode, body } = structuredResponse;
+    const { statusCode, body } = response;
 
     if (statusCode !== 200) {
       throw new Error(`Unexpected status code: ${statusCode}`);
