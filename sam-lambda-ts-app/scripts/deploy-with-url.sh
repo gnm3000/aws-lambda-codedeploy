@@ -24,8 +24,11 @@ REGION="${REGION:-us-east-1}"
 CURRENT_REGION="$(aws configure get region)"
 echo "Deploying to region: ${CURRENT_REGION:-<none>}"
 echo "Using stack name: ${STACK_NAME}"
+echo "Using SAM region: ${REGION}"
 
+pushd "${PROJECT_ROOT}" >/dev/null
 sam deploy --region "${REGION}" --stack-name "${STACK_NAME}" "$@"
+popd >/dev/null
 
 if ! command -v aws >/dev/null 2>&1; then
   echo "AWS CLI not available; skipping API URL lookup." >&2
