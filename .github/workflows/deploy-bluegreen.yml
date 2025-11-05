@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - 'serverless-bluegreen/**'
-      - '.github/workflows/**'
+      - '.github/workflows/deploy-bluegreen.yml'
     branches:
       - main
       - develop
