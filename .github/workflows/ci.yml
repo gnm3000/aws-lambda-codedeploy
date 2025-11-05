@@ -1,0 +1,176 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+      - main
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: serverless-bluegreen
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: serverless-bluegreen/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: serverless-bluegreen
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: serverless-bluegreen/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+    defaults:
+      run:
+        working-directory: serverless-bluegreen
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: serverless-bluegreen/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Package service with Serverless v3
+        run: npx --yes serverless@3.39.0 package
+
+      - name: Upload Serverless package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: serverless-package
+          path: serverless-bluegreen/.serverless
+          if-no-files-found: error
+
+  deploy-dev:
+    name: Deploy to AWS (Dev)
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Serverless package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: serverless-package
+          path: serverless-bluegreen
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: serverless-bluegreen/package-lock.json
+
+      - name: Install dependencies
+        working-directory: serverless-bluegreen
+        run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy with Serverless v3 (Dev)
+        working-directory: serverless-bluegreen
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+        run: npx --yes serverless@3.39.0 deploy --stage dev --package ./serverless-package --verbose
+
+  deploy-prod:
+    name: Deploy to AWS (Prod)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Serverless package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: serverless-package
+          path: serverless-bluegreen
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: serverless-bluegreen/package-lock.json
+
+      - name: Install dependencies
+        working-directory: serverless-bluegreen
+        run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy with Serverless v3 (Prod)
+        working-directory: serverless-bluegreen
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+        run: npx --yes serverless@3.39.0 deploy --stage prod --package ./serverless-package --verbose
