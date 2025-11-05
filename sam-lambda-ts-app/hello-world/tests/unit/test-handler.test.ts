@@ -41,6 +41,8 @@ describe('Unit test for app handler', function () {
                     user: '',
                     userAgent: '',
                     userArn: '',
+                    vpcId: '',
+                    vpceId: '',
                 },
                 path: '/hello',
                 protocol: 'HTTP/1.1',
