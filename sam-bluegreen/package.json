@@ -1,0 +1,31 @@
+{
+  "name": "sam-bluegreen",
+  "version": "1.0.0",
+  "description": "AWS SAM TypeScript hello world example for blue/green deployments",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist .aws-sam",
+    "sam:build": "npm run build && sam build",
+    "sam:local": "sam local start-api",
+    "sam:invoke": "sam local invoke HelloFunction",
+    "sam:package": "sam package --output-template-file packaged.yaml",
+    "sam:deploy": "npm run build && sam deploy",
+    "sam:deploy:guided": "npm run build && sam deploy --guided",
+    "sam:logs": "sam logs -n HelloFunction --stack-name sam-bluegreen --tail",
+    "sam:delete": "sam delete"
+  },
+  "keywords": [
+    "aws",
+    "sam",
+    "lambda",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.126",
+    "@types/node": "^20.12.7",
+    "typescript": "^5.4.0"
+  }
+}
