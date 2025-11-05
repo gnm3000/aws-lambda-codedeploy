@@ -12,7 +12,14 @@ export interface LifecycleEventDetails {
   lifecycleEventHookExecutionId: string;
 }
 
-export class LifecycleNotifier {
+export interface LifecycleNotifierContract {
+  notify(
+    details: LifecycleEventDetails,
+    status: LifecycleEventStatus
+  ): Promise<void>;
+}
+
+export class LifecycleNotifier implements LifecycleNotifierContract {
   constructor(private readonly client: CodeDeployClient) {}
 
   public async notify(

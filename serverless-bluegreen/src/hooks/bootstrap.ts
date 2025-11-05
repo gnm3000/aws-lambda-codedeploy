@@ -1,14 +1,18 @@
 import { CodeDeployClient } from '@aws-sdk/client-codedeploy';
 import { handler } from '../handler';
-import { DeploymentValidator } from './DeploymentValidator';
+import {
+  DeploymentValidator,
+  type DeploymentValidatorContract,
+} from './DeploymentValidator';
 import {
   LifecycleNotifier,
   type LifecycleEventDetails,
+  type LifecycleNotifierContract,
 } from './LifecycleNotifier';
 
 export interface HookDependencies {
-  deploymentValidator: DeploymentValidator;
-  lifecycleNotifier: LifecycleNotifier;
+  deploymentValidator: DeploymentValidatorContract;
+  lifecycleNotifier: LifecycleNotifierContract;
 }
 
 export type LifecycleHookHandler = (
