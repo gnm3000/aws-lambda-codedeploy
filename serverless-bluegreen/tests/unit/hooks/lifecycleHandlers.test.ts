@@ -5,6 +5,22 @@ import type {
 } from '../../../src/hooks/bootstrap';
 
 describe('Lifecycle hook handlers', () => {
+  const consoleLogSpy = jest
+    .spyOn(console, 'log')
+    .mockImplementation(() => undefined);
+  const consoleErrorSpy = jest
+    .spyOn(console, 'error')
+    .mockImplementation(() => undefined);
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    consoleLogSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
+  });
+
   const baseEvent: ExtendedCodeDeployLifecycleEvent = {
     deploymentId: 'd-123',
     lifecycleEventHookExecutionId: 'l-456',
@@ -46,6 +62,10 @@ describe('Lifecycle hook handlers', () => {
       'validation failed'
     );
 
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'AfterAllowTraffic validation failed',
+      failure
+    );
     expect(deps.lifecycleNotifier.notify).toHaveBeenCalledWith(
       {
         deploymentId: 'd-123',
