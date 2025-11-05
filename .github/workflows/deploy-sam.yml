@@ -51,4 +51,4 @@ jobs:
         run: sam build --config-env prod
 
       - name: Deploy SAM application
-        run: ./scripts/deploy-with-url.sh --config-env prod --no-confirm-changeset --no-progressbar
+        run: sam deploy --config-env prod --no-confirm-changeset --no-progressbar --region us-east-1 --stack-name sam-lambda-ts-app
