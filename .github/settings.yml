@@ -1,0 +1,20 @@
+repository:
+  name: aws-lambda-codedeploy
+
+branches:
+  - name: main
+    protection:
+      required_status_checks:
+        strict: true
+        contexts:
+          - "CI Pipeline / Lint"
+          - "CI Pipeline / Test"
+          - "CI Pipeline / Build"
+  - name: develop
+    protection:
+      required_status_checks:
+        strict: true
+        contexts:
+          - "CI Pipeline / Lint"
+          - "CI Pipeline / Test"
+          - "CI Pipeline / Build"
