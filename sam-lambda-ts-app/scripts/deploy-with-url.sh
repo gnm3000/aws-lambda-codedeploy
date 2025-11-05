@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Deploy the SAM application and print the API Gateway URL when finished.
+# Deploy the SAM application and optionally print the API Gateway URL.
 
 set -euo pipefail
 
@@ -30,21 +30,15 @@ pushd "${PROJECT_ROOT}" >/dev/null
 sam deploy --region "${REGION}" --stack-name "${STACK_NAME}" "$@"
 popd >/dev/null
 
-if ! command -v aws >/dev/null 2>&1; then
-  echo "AWS CLI not available; skipping API URL lookup." >&2
-  exit 0
+if command -v aws >/dev/null 2>&1; then
+  API_URL="$(aws cloudformation describe-stacks \
+    --stack-name "${STACK_NAME}" \
+    --query "Stacks[0].Outputs[?OutputKey=='HelloWorldApi'].OutputValue" \
+    --output text 2>/dev/null || echo "")"
+
+  if [ -n "${API_URL}" ] && [ "${API_URL}" != "None" ]; then
+    echo
+    echo "API endpoint:"
+    echo "  ${API_URL}"
+  fi
 fi
-
-API_URL="$(aws cloudformation describe-stacks \
-  --stack-name "${STACK_NAME}" \
-  --query "Stacks[0].Outputs[?OutputKey=='HelloWorldApi'].OutputValue" \
-  --output text 2>/dev/null || echo "")"
-
-if [ -z "${API_URL}" ] || [ "${API_URL}" = "None" ]; then
-  echo "API URL output not found for stack '${STACK_NAME}'." >&2
-  exit 0
-fi
-
-echo
-echo "API endpoint:"
-echo "  ${API_URL}"
