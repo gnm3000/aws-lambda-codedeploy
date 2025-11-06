@@ -63,7 +63,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sam-dist
-          path: .aws-sam
+          path: sam-lambda-ts-app/.aws-sam
 
 
   deploy:
@@ -84,7 +84,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: sam-dist
-          path: .aws-sam
+          path: sam-lambda-ts-app/.aws-sam
 
       - name: Verify downloaded artifact
         run: ls -R .aws-sam || echo "Artifact missing"
