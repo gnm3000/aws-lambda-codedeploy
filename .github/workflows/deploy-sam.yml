@@ -38,11 +38,11 @@ jobs:
           else
             npm install
           fi
-        working-directory: hello-world
+        working-directory: sam-lambda-ts-app/hello-world
 
       - name: Run tests
         run: npm test
-        working-directory: hello-world
+        working-directory: sam-lambda-ts-app/hello-world
 
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
