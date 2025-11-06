@@ -95,7 +95,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
-          tag: sam-lambda-ts-app-${{ github.ref_name }}-${{ github.run_number }}-${{ github.sha::0:7 }}
+          tag: sam-lambda-ts-app-${{ github.ref_name }}-${{ github.run_number }}-${{ github.sha }}
+
           body: |
             Deployment Info:
             - Commit: ${{ github.sha }}
