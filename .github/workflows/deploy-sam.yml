@@ -10,18 +10,21 @@ on:
       - '.github/workflows/deploy-sam.yml'
   workflow_dispatch:
 
+
+permissions:
+  contents: write
+
 jobs:
-  build-and-deploy-sam:
-    name: Build and Deploy SAM
+  build:
+    name: Build and Test
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
         working-directory: sam-lambda-ts-app
-    environment: prod
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -30,7 +33,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
         working-directory: sam-lambda-ts-app/hello-world
 
       - name: Run tests
@@ -40,6 +43,42 @@ jobs:
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
 
+      - name: Validate SAM template
+        run: sam validate --config-env prod
+
+      - name: Build SAM
+        run: sam build --config-env prod
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sam-dist
+          path: sam-lambda-ts-app/.aws-sam
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    environment: prod
+    defaults:
+      run:
+        shell: bash
+        working-directory: sam-lambda-ts-app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sam-dist
+          path: sam-lambda-ts-app/.aws-sam
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+
+      
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -47,8 +86,25 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Build SAM application
-        run: sam build --config-env prod
+      - name: Deploy SAM
+        run: sam deploy --config-env prod --no-confirm-changeset --no-progressbar --stack-name sam-lambda-ts-app
+        
+      - name: Post-deployment Notification
+        run: echo "SAM Lambda application deployed successfully!"
+      - name: Tag deployment
+        if: github.ref == 'refs/heads/main'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: sam-lambda-ts-app-${{ github.ref_name }}-${{ github.run_number }}-${{ github.sha::0:7 }}
 
-      - name: Deploy SAM application
-        run: sam deploy --config-env prod --no-confirm-changeset --no-progressbar --region us-east-1 --stack-name sam-lambda-ts-app
+          body: |
+            Deployment Info:
+            - Commit: ${{ github.sha }}
+            - Branch: ${{ github.ref_name }}
+            - Actor: ${{ github.actor }}
+            - Timestamp: ${{ github.event.head_commit.timestamp }}
+            - Workflow: ${{ github.workflow }}
+            - Run ID: ${{ github.run_id }}
+
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
+
