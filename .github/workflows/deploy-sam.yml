@@ -32,15 +32,23 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm ci
-        working-directory: sam-lambda-ts-app/hello-world
+        run: |
+          if [ -f hello-world/package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+        working-directory: hello-world
 
       - name: Run tests
         run: npm test
-        working-directory: sam-lambda-ts-app/hello-world
+        working-directory: hello-world
 
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate SAM template
         run: sam validate --config-env prod
@@ -49,13 +57,14 @@ jobs:
         run: sam build --config-env prod
 
       - name: Verify SAM build output
-        run: ls -R sam-lambda-ts-app/.aws-sam || echo "Build folder not found"
+        run: ls -R .aws-sam || echo "Build folder not found"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: sam-dist
-          path: sam-lambda-ts-app/.aws-sam
+          path: .aws-sam
+
 
   deploy:
     name: Deploy
@@ -75,13 +84,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: sam-dist
-          path: sam-lambda-ts-app/.aws-sam
+          path: .aws-sam
 
       - name: Verify downloaded artifact
-        run: ls -R sam-lambda-ts-app/.aws-sam || echo "Artifact missing"
+        run: ls -R .aws-sam || echo "Artifact missing"
 
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
