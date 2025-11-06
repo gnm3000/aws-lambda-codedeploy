@@ -57,13 +57,21 @@ jobs:
         run: sam build --config-env prod
 
       - name: Verify SAM build output
-        run: ls -R .aws-sam || echo "Build folder not found"
+        run: |
+          if [ ! -d .aws-sam ]; then
+            echo "Build folder not found"
+            exit 1
+          fi
+          ls -R .aws-sam
+
+      - name: Archive SAM build
+        run: tar -czf sam-build.tar.gz -C .aws-sam .
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: sam-dist
-          path: ${{ github.workspace }}/sam-lambda-ts-app/.aws-sam
+          path: ${{ github.workspace }}/sam-lambda-ts-app/sam-build.tar.gz
           if-no-files-found: error
 
 
@@ -85,11 +93,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: sam-dist
-          path: ${{ github.workspace }}/sam-lambda-ts-app/.aws-sam
-          merge-multiple: true
+          path: ${{ github.workspace }}/sam-lambda-ts-app/artifacts
+
+      - name: Extract SAM build artifact
+        run: |
+          rm -rf .aws-sam
+          mkdir -p .aws-sam
+          tar -xzf artifacts/sam-build.tar.gz -C .aws-sam
+          rm -rf artifacts
 
       - name: Verify downloaded artifact
-        run: ls -R .aws-sam || echo "Artifact missing"
+        run: ls -R .aws-sam
 
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
