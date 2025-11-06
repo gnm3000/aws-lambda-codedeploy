@@ -96,7 +96,6 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: sam-lambda-ts-app-${{ github.ref_name }}-${{ github.run_number }}-${{ github.sha::0:7 }}
-
           body: |
             Deployment Info:
             - Commit: ${{ github.sha }}
@@ -105,6 +104,6 @@ jobs:
             - Timestamp: ${{ github.event.head_commit.timestamp }}
             - Workflow: ${{ github.workflow }}
             - Run ID: ${{ github.run_id }}
-
           token: ${{ secrets.MY_GITHUB_TOKEN }}
+
 
