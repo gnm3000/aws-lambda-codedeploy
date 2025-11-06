@@ -49,11 +49,15 @@ jobs:
       - name: Build SAM
         run: sam build --config-env prod
 
+      - name: Verify SAM build output
+        run: ls -R sam-lambda-ts-app/.aws-sam || echo "Build folder not found"
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: sam-dist
           path: sam-lambda-ts-app/.aws-sam
+
 
   deploy:
     name: Deploy
@@ -74,6 +78,10 @@ jobs:
         with:
           name: sam-dist
           path: sam-lambda-ts-app/.aws-sam
+
+      - name: Verify downloaded artifact
+        run: ls -R sam-lambda-ts-app/.aws-sam || echo "Artifact missing"
+
 
       - name: Setup SAM CLI
         uses: aws-actions/setup-sam@v2
