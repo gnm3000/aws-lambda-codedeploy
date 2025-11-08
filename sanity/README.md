@@ -1,3 +1,15 @@
+## Sanity Integration
+- Folder: `/sanity`
+- Schema: `processedDocument`
+- Commands:
+  ```bash
+  cd sanity
+  npm run dev
+  npm run deploy
+
+
+
+
 # Sanity Clean Content Studio
 
 Congratulations, you have now installed the Sanity Content Studio, an open-source real-time content editing environment connected to the Sanity backend.
