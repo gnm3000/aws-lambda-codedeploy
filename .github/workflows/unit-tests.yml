@@ -1,8 +1,12 @@
-name: Unit Tests
+name: Unit Tests serverless framework bluegreen
+
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
+    paths:
+      - 'serverless-bluegreen/**'
+      - '.github/workflows/deploy-bluegreen.yml'
 
 jobs:
   unit-tests:
